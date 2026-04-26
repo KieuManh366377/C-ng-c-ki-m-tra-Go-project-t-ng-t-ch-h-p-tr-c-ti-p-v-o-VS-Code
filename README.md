@@ -1,287 +1,215 @@
-# 🔧 GoToolkitConsole
+# GoToolkitConsole — Hướng dẫn sử dụng
 
-> **Công cụ kiểm tra Go project tự động — tích hợp trực tiếp vào VS Code**  
-> Viết bằng Delphi · Chạy trên Windows · Không cần cấu hình
-
----
-
-## ✨ Tính năng
-
-| | Tính năng | Mô tả |
-|---|---|---|
-| 🔍 | **go vet** | Phát hiện lỗi logic và cú pháp phổ biến |
-| 🧪 | **staticcheck** | Phân tích tĩnh nâng cao, phát hiện code deprecated |
-| 🏗️ | **Build amd64** | Kiểm tra build Windows 64-bit |
-| 🏗️ | **Build 386** | Kiểm tra build Windows 32-bit |
-| 📄 | **Auto log** | Có lỗi → ghi log → tự mở lên. Không lỗi → thoát im lặng |
-| 🔎 | **Tự tìm go.exe** | Không cần hardcode đường dẫn |
-| 📦 | **Portable** | Copy vào project nào cũng chạy ngay |
+Công cụ kiểm tra tự động cho Go project trên Windows.  
+Tích hợp trực tiếp vào VS Code — nhấn một phím là chạy toàn bộ.
 
 ---
 
-## 🖥️ Demo
+## Công cụ làm gì?
 
-**Khi tất cả OK** — terminal tự đóng, không làm phiền:
+Mỗi lần chạy, công cụ thực hiện 4 bước theo thứ tự:
+
+| Bước | Công cụ | Mục đích |
+|------|---------|----------|
+| 1 | `go vet` | Phát hiện lỗi logic, cú pháp phổ biến |
+| 2 | `staticcheck` | Phân tích tĩnh nâng cao, phát hiện code deprecated |
+| 3 | `go build` amd64 | Kiểm tra build Windows 64-bit |
+| 4 | `go build` 386 | Kiểm tra build Windows 32-bit |
+
+**Kết quả:**
+- ✅ Tất cả OK → thoát im lặng, không làm phiền
+- ❌ Có lỗi → ghi file log → tự động mở lên để xem
+
+---
+
+## Yêu cầu hệ thống
+
+| Phần mềm | Tải về |
+|----------|--------|
+| **Go** (bắt buộc) | https://go.dev/dl/ |
+| **VS Code** (bắt buộc) | https://code.visualstudio.com/ |
+| **staticcheck** (khuyến nghị) | Xem hướng dẫn bên dưới |
+| **MSYS2** (nếu dùng cgo) | https://www.msys2.org/ |
+
+### Cài staticcheck
+
+Mở terminal, chạy lệnh:
+```
+go install honnef.co/go/tools/cmd/staticcheck@latest
+```
+
+### Cài MSYS2 cho cgo (build DLL, C bindings)
+
+1. Tải và cài MSYS2 tại https://www.msys2.org/
+2. Mở **MSYS2 UCRT64**, chạy:
+```
+pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-i686-gcc
+```
+
+> Nếu project không dùng cgo (không import "C"), bỏ qua bước này.
+
+---
+
+## Cài đặt
+
+### Bước 1 — Chuẩn bị file
+
+Bạn nhận được 2 file:
+```
+GoToolkitConsole.exe
+tasks.json
+```
+
+### Bước 2 — Copy vào project
+
+Tạo thư mục `.vscode` trong thư mục gốc project Go của bạn (nếu chưa có), rồi copy cả 2 file vào:
 
 ```
-[INFO] === GO TOOLKIT CHECKER ===
-[INFO] Project : D:\MyApp\GoLibrary
-[INFO] go.exe  : C:\Program Files\Go\bin\go.exe
+TenProject\
+├── .vscode\
+│   ├── GoToolkitConsole.exe   ← copy vào đây
+│   └── tasks.json             ← copy vào đây
+├── go.mod
+├── main.go
+└── ...
+```
 
-[INFO] === GO VET ===
+> **Lưu ý:** Thư mục `.vscode` phải nằm cùng cấp với file `go.mod`.
+
+### Bước 3 — Mở project trong VS Code
+
+```
+File → Open Folder → chọn thư mục TenProject
+```
+
+---
+
+## Sử dụng
+
+### Chạy kiểm tra
+
+Nhấn **`Ctrl + Shift + B`**
+
+Hoặc:
+1. Nhấn `Ctrl + Shift + P`
+2. Gõ `Run Task`
+3. Chọn **"Go: Kiểm tra toàn bộ"**
+
+### Đọc kết quả
+
+Terminal hiện ra output theo định dạng:
+
+```
+[INFO]  thông tin thông thường
+[OK]    bước thành công
+[WARN]  cảnh báo (không dừng)
+[FAIL]  lỗi cần sửa
+```
+
+**Ví dụ kết quả OK:**
+```
+=== GO VET ===
 [OK]   GO VET OK
 
-[INFO] === STATICCHECK ===
+=== STATICCHECK ===
 [OK]   STATICCHECK OK
 
-[INFO] === BUILD amd64 ===
+=== BUILD amd64 ===
 [OK]   BUILD amd64 OK
 
-[INFO] === BUILD 386 ===
+=== BUILD 386 ===
 [OK]   BUILD 386 OK
 
 =====================================
 [OK]   TAT CA OK
 ```
 
-**Khi có lỗi** — log chi tiết tự động mở ra:
-
+**Ví dụ kết quả có lỗi:**
 ```
-[INFO] === STATICCHECK ===
-[INFO]   crypto.go:45:12: cipher.NewCFBEncrypter has been deprecated
-         since Go 1.24 — use AEAD mode instead. (SA1019)
+=== STATICCHECK ===
+[INFO]   crypto.go:45:12: cipher.NewCFBEncrypter has been deprecated...
 [FAIL] STATICCHECK THAT BAI
 
 =====================================
 [FAIL] CO LOI - xem log
-Log: C:\Users\...\AppData\Local\Temp\GoToolkitChecker.log
+Log: C:\Users\TenUser\AppData\Local\Temp\GoToolkitChecker.log
 ```
+→ File log tự động mở ra để xem chi tiết.
 
 ---
 
-## 🚀 Cài đặt
+## File log
 
-### Yêu cầu
-
-- 🪟 Windows 10 / 11
-- 🐹 [Go 1.18+](https://go.dev/dl/)
-- 💻 [VS Code](https://code.visualstudio.com/)
-- 🔬 [staticcheck](https://staticcheck.dev/) *(khuyến nghị)*
-
-```bash
-# Cài staticcheck
-go install honnef.co/go/tools/cmd/staticcheck@latest
-```
-
-### Cài đặt chỉ 2 bước
-
-**Bước 1** — Tải 2 file:
-
-```
-GoToolkitConsole.exe
-tasks.json
-```
-
-**Bước 2** — Copy vào thư mục `.vscode\` của project:
-
-```
-📁 MyGoProject\
-├── 📁 .vscode\
-│   ├── ⚙️  GoToolkitConsole.exe   ← copy vào đây
-│   └── 📋 tasks.json              ← copy vào đây
-├── 📄 go.mod
-├── 📄 main.go
-└── ...
-```
-
-> ✅ Xong! Không cần cài thêm gì, không cần cấu hình.
+- **Vị trí:** `%TEMP%\GoToolkitChecker.log`  
+  (thường là `C:\Users\TenUser\AppData\Local\Temp\GoToolkitChecker.log`)
+- **Chỉ tạo khi có lỗi** — nếu OK không tạo file
+- **Tự dọn** theo Windows Disk Cleanup, không rác project
 
 ---
 
-## ⌨️ Sử dụng
+## Công cụ tự tìm go.exe
 
-Mở project trong VS Code, nhấn:
+Không cần cấu hình đường dẫn. Công cụ tự tìm `go.exe` theo thứ tự:
 
-```
-Ctrl + Shift + B
-```
+1. Registry `HKLM\SOFTWARE\Go` (Go installer chính thức)
+2. Biến môi trường `GOROOT`
+3. Quét toàn bộ `PATH`
+4. Các vị trí phổ biến:
+   - `C:\Program Files\Go\bin\go.exe`
+   - `C:\Go\bin\go.exe`
+   - `C:\ProgramData\chocolatey\bin\go.exe` (Chocolatey)
+   - v.v.
 
-Hoặc `Ctrl+Shift+P` → **"Run Task"** → chọn **"Go: Kiểm tra toàn bộ"**
-
----
-
-## 🧠 Cách hoạt động
-
-```
-Ctrl+Shift+B
-      │
-      ▼
-GoToolkitConsole.exe
-      │
-      ├─► go vet ./...
-      │
-      ├─► staticcheck ./...
-      │
-      ├─► go build (amd64)
-      │
-      └─► go build (386)
-            │
-            ├── ✅ Tất cả OK  →  thoát im lặng (exit 0)
-            │
-            └── ❌ Có lỗi    →  ghi %TEMP%\GoToolkitChecker.log
-                               →  tự mở file log (exit 1)
-```
+Nếu không tìm thấy, file log sẽ hiện thông báo và link tải Go.
 
 ---
 
-## 🔎 Tự động tìm go.exe
+## Dùng cho nhiều project
 
-Không cần hardcode đường dẫn. Công cụ tìm `go.exe` theo thứ tự:
-
-```
-1️⃣  Registry   HKLM\SOFTWARE\Go         (Go installer chính thức)
-2️⃣  Env var    %GOROOT%\bin\go.exe
-3️⃣  PATH       quét toàn bộ thư mục trong PATH
-4️⃣  Fallback   C:\Program Files\Go\bin\go.exe
-               C:\Go\bin\go.exe
-               C:\ProgramData\chocolatey\bin\go.exe  (Chocolatey)
-               ...
-```
-
----
-
-## 📁 File log
-
-| Thuộc tính | Chi tiết |
-|---|---|
-| 📍 Vị trí | `%TEMP%\GoToolkitChecker.log` |
-| 🕐 Tạo khi | Chỉ khi có lỗi |
-| 🗑️ Dọn dẹp | Tự động theo Windows Disk Cleanup |
-| 🔓 Mở bằng | App mặc định của hệ thống |
-
-> Không tạo file rác trong thư mục project.
-
----
-
-## 📦 Dùng cho nhiều project
-
-Copy 2 file vào `.vscode\` của bất kỳ project nào — **không cần chỉnh sửa gì**:
+Chỉ cần **copy 2 file** vào `.vscode\` của project mới — không cần chỉnh sửa gì:
 
 ```
-📁 ProjectA\
-└── 📁 .vscode\
-    ├── ⚙️  GoToolkitConsole.exe
-    └── 📋 tasks.json
+ProjectA\
+└── .vscode\
+    ├── GoToolkitConsole.exe
+    └── tasks.json
 
-📁 ProjectB\
-└── 📁 .vscode\
-    ├── ⚙️  GoToolkitConsole.exe
-    └── 📋 tasks.json
+ProjectB\
+└── .vscode\
+    ├── GoToolkitConsole.exe
+    └── tasks.json
 ```
 
 Công cụ tự nhận diện thư mục project dựa vào vị trí file `go.mod`.
 
 ---
 
-## ❓ Xử lý sự cố
+## Xử lý sự cố
 
-<details>
-<summary><b>🔴 Không tìm thấy go.exe</b></summary>
-
-Go chưa được cài hoặc chưa có trong PATH.  
-→ Tải và cài Go tại https://go.dev/dl/  
-→ Khởi động lại VS Code sau khi cài
-
-</details>
-
-<details>
-<summary><b>🔴 Không tìm thấy go.mod</b></summary>
-
-VS Code đang mở sai thư mục.  
-→ `File → Open Folder` → chọn thư mục chứa `go.mod`
-
-</details>
-
-<details>
-<summary><b>🟡 staticcheck bị bỏ qua</b></summary>
-
-staticcheck chưa được cài.  
-→ Chạy: `go install honnef.co/go/tools/cmd/staticcheck@latest`
-
-</details>
-
-<details>
-<summary><b>🔴 Build thất bại — lỗi gcc</b></summary>
-
-Project dùng cgo nhưng chưa cài GCC.  
-→ Cài [MSYS2](https://www.msys2.org/) và chạy:
-
-```bash
-pacman -S mingw-w64-ucrt-x86_64-gcc mingw-w64-i686-gcc
-```
-
-</details>
-
-<details>
-<summary><b>🔴 Task không xuất hiện trong VS Code</b></summary>
-
-`tasks.json` đặt sai vị trí.  
-→ Kiểm tra file nằm tại `TenProject\.vscode\tasks.json`
-
-</details>
+| Triệu chứng | Nguyên nhân | Cách sửa |
+|-------------|-------------|----------|
+| `Khong tim thay go.exe` | Go chưa cài hoặc PATH chưa có | Cài Go tại go.dev/dl, khởi động lại VS Code |
+| `Khong tim thay go.mod` | Mở sai thư mục trong VS Code | `File → Open Folder` → chọn đúng thư mục chứa `go.mod` |
+| `Khong tim thay staticcheck` | Chưa cài | Chạy `go install honnef.co/go/tools/cmd/staticcheck@latest` |
+| Build 386/amd64 thất bại với lỗi gcc | MSYS2 chưa cài hoặc thiếu GCC | Cài MSYS2 và GCC theo hướng dẫn ở trên |
+| Task không xuất hiện trong VS Code | `tasks.json` đặt sai chỗ | Kiểm tra `.vscode\tasks.json` nằm đúng trong thư mục project |
 
 ---
 
-## 🛠️ tasks.json
+## Cấu trúc thư mục chuẩn
 
-```json
-{
-  "version": "2.0.0",
-  "tasks": [
-    {
-      "label": "Go: Kiểm tra toàn bộ",
-      "type": "process",
-      "command": "${workspaceFolder}\\.vscode\\GoToolkitConsole.exe",
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "dedicated",
-        "clear": true,
-        "showReuseMessage": false
-      },
-      "problemMatcher": []
-    }
-  ]
-}
+```
+TenProject\                  ← mở thư mục này trong VS Code
+├── .vscode\
+│   ├── GoToolkitConsole.exe
+│   └── tasks.json
+├── go.mod                   ← công cụ tìm file này để xác định project
+├── go.sum
+├── main.go
+└── ...các file .go khác...
 ```
 
 ---
 
-## 📋 Yêu cầu hệ thống
-
-| | |
-|---|---|
-| 🪟 OS | Windows 10 / 11 x64 |
-| 🐹 Go | 1.18 trở lên |
-| 💻 VS Code | Bất kỳ phiên bản nào |
-| 🔬 staticcheck | Tùy chọn, khuyến nghị |
-| 🔨 GCC/MSYS2 | Chỉ cần nếu project dùng cgo |
-
----
-
-## 📜 License
-
-MIT — tự do sử dụng, chỉnh sửa và phân phối.
-
----
-
-<div align="center">
-
-**Nếu công cụ hữu ích, hãy ⭐ star repo này!**
-
-*Xây dựng bằng ❤️ và Delphi 13.1*
-
-</div>
+*GoToolkitConsole — xây dựng bằng Delphi 13.1*  
+*Yêu cầu: Windows 10/11 x64, Go 1.18+*
